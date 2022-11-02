@@ -107,15 +107,13 @@ disable_selinux(){
 
 check_domain(){
     green "========================="
-    yellow "请输入绑定到本VPS的域名"
-    yellow "   安装时请关闭CDN"
+    yellow "请输入绑定到本VPS的ip"
     green "========================="
     read your_domain
-    real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-    local_addr=`curl ipv4.icanhazip.com`
-    if [ $real_addr == $local_addr ] ; then
+    real_addr=`curl ipv4.icanhazip.com`
+    if [ $real_addr == $your_domain ] ; then
         green "============================="
-        green "域名解析正常，开始安装爬虫"
+        green "IP检测正常，开始安装爬虫"
         green "============================="
         sleep 1s
         download_pc   
@@ -123,8 +121,8 @@ check_domain(){
         config_ssl
     else
         red "================================="
-        red "域名解析地址与本VPS IP地址不一致"
-        red "本次安装失败，请确保域名解析正常"
+        red "输入的IP与本VPS IP地址不一致"
+        red "本次安装失败，请确保IP正常"
         red "================================="
         exit 1
     fi
@@ -186,40 +184,12 @@ http {
 }
 EOF
 
-    curl https://get.acme.sh | sh -s email=my@example.com
-    ~/.acme.sh/acme.sh  --issue  -d $your_domain  --standalone
-    ~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
-        --key-file   /etc/nginx/ssl/$your_domain.key \
-        --fullchain-file /etc/nginx/ssl/fullchain.cer
-
 cat > /etc/nginx/conf.d/default.conf<<-EOF
 server {
-    listen 80 default_server;
-    server_name _;
-    return 404;  
-}
-server {
-    listen 443 ssl default_server;
-    server_name _;
-    ssl_certificate /etc/nginx/ssl/fullchain.cer; 
-    ssl_certificate_key /etc/nginx/ssl/$your_domain.key;
-    return 404;
-}
-server { 
-    listen       80;
-    server_name  $your_domain;
-    rewrite ^(.*)$  https://\$host\$1 permanent; 
-}
-server {
-    listen 443 ssl http2;
+    listen 80;
     server_name $your_domain;
     root /usr/share/nginx/html;
     index index.php index.html;
-    ssl_certificate /etc/nginx/ssl/fullchain.cer; 
-    ssl_certificate_key /etc/nginx/ssl/$your_domain.key;
-    ssl_stapling on;
-    ssl_stapling_verify on;
-    add_header Strict-Transport-Security "max-age=31536000";
     access_log /var/log/nginx/hostscube.log combined;
     location ~ \.php$ {
         fastcgi_pass 127.0.0.1:9000;
@@ -239,17 +209,12 @@ config_ssl(){
 
     echo
     green "===================="
-    green " 3.验证ssl证书"
+    green " 3.nginx重启"
     green "===================="
     echo
     echo
     sleep 1
     systemctl restart nginx.service
-    ~/.acme.sh/acme.sh  --issue --force  -d $your_domain  --nginx
-    ~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
-        --key-file   /etc/nginx/ssl/$your_domain.key \
-        --fullchain-file /etc/nginx/ssl/fullchain.cer \
-        --reloadcmd  "systemctl restart nginx"	
     sleep 1
     echo
     green "===================="
@@ -326,7 +291,7 @@ uninstall_pc(){
 start_menu(){
     clear
     green "======================================="
-    green " 环境：适用于CentOS7，一键安装免费节点爬虫"
+    green " 环境：适用于CentOS7，非域名一键安装免费节点爬虫"
     green " 作者：Littleyu+部分代码来源网络"
     green " 网站：yugogo.xyz"
     green " Youtube频道：yu little"

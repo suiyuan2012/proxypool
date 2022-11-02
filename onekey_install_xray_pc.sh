@@ -213,7 +213,7 @@ EOF
     systemctl enable nginx.service
     systemctl restart nginx.service
     green "$(date +"%Y-%m-%d %H:%M:%S") - 使用acme.sh申请https证书."
-    curl https://get.acme.sh | sh
+    curl https://get.acme.sh | sh -s email=my@example.com
     ~/.acme.sh/acme.sh  --issue  -d $your_domain  --webroot /usr/share/nginx/html/
     if test -s /root/.acme.sh/$your_domain/fullchain.cer; then
         green "$(date +"%Y-%m-%d %H:%M:%S") - 申请https证书成功."
@@ -444,7 +444,7 @@ function start_menu(){
     green " ======================================================"
     green " 描述：xray + 免费节点爬虫一键安装脚本"
     green " 系统：仅支持centos7"
-    green " 作者：Littleyu+部分代码源于atrandys  www.yugogo.xyz"
+    green " 作者：Littleyu+部分代码源于网络  www.yugogo.xyz"
     green " YouTuBe频道：Littleyu科学上网"
     green " ======================================================"
     echo
